@@ -115,7 +115,7 @@ pub(crate) enum MeshAgentMessage {
 /// A mesh agent is responsible for managing procs in a [`ProcMesh`].
 #[derive(Debug)]
 #[hyperactor::export(handlers=[MeshAgentMessage])]
-pub struct MeshAgent {
+pub struct ProcMeshAgent {
     proc: Proc,
     remote: Remote,
     sender: ReconfigurableMailboxSender,
@@ -123,7 +123,7 @@ pub struct MeshAgent {
     supervisor: Option<PortRef<ActorSupervisionEvent>>,
 }
 
-impl MeshAgent {
+impl ProcMeshAgent {
     #[hyperactor::observe_result("MeshAgent")]
     pub(crate) async fn bootstrap(
         proc_id: ProcId,
@@ -135,7 +135,7 @@ impl MeshAgent {
         // this process can reach actors in this proc.
         super::router::global().bind(proc_id.into(), proc.clone());
 
-        let agent = MeshAgent {
+        let agent = ProcMeshAgent {
             proc: proc.clone(),
             remote: Remote::collect(),
             sender,
@@ -148,7 +148,7 @@ impl MeshAgent {
 }
 
 #[async_trait]
-impl Actor for MeshAgent {
+impl Actor for ProcMeshAgent {
     type Params = Self;
 
     async fn new(params: Self::Params) -> Result<Self, anyhow::Error> {
@@ -163,7 +163,7 @@ impl Actor for MeshAgent {
 
 #[async_trait]
 #[hyperactor::forward(MeshAgentMessage)]
-impl MeshAgentMessageHandler for MeshAgent {
+impl MeshAgentMessageHandler for ProcMeshAgent {
     async fn configure(
         &mut self,
         cx: &Context<Self>,
@@ -262,7 +262,7 @@ impl MeshAgentMessageHandler for MeshAgent {
 }
 
 #[async_trait]
-impl Handler<ActorSupervisionEvent> for MeshAgent {
+impl Handler<ActorSupervisionEvent> for ProcMeshAgent {
     async fn handle(
         &mut self,
         cx: &Context<Self>,
